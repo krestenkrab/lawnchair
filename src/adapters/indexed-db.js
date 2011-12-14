@@ -154,8 +154,31 @@ Lawnchair.adapter('indexed-db', (function(){
         return this;
     },
 
-    all:function(callback) {
+    async_each: function (callback, done_callback) {
         if(!this.store) {
+            this.waiting.push(function() {
+                this.async_each(callback, done_callback);
+            });
+            return;
+        }
+        var self = this;
+        var objectStore = this.db.transaction("teststore").objectStore("teststore");
+        var index = 0;
+        objectStore.openCursor().onsuccess = function(event) {
+          var cursor = event.target.result;
+          if (cursor) {
+              if (callback) callback.call(self, cursor.value, index++);
+              cursor['continue']();
+          }
+          else {
+              if (done_callback) done_callback.call(self, null, -1);
+          }
+        };
+        return this;
+    },
+
+    all:function(callback) {
+         if(!this.store) {
             this.waiting.push(function() {
                 this.all(callback);
             });

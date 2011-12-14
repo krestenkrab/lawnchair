@@ -109,7 +109,7 @@ test('scoped variable in shorthand callback', function() {
     var tmp = new Lawnchair({name:'temps', record:'tmp'}, function() {
 		this.nuke(function() {
 			this.save({a:1}, function() {
-				this.each('ok(tmp, "this.record is passed to each callback"); QUnit.start()')
+			    this.each('ok(tmp, "this.record is passed to each callback");', 'QUnit.start()')
 			})
 		})
     })

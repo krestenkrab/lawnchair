@@ -76,7 +76,10 @@ Lawnchair.adapter = function (id, obj) {
     ,   indexOf = this.prototype.indexOf
     // mix in the adapter   
     for (var i in obj) {
-        if (indexOf(implementing, i) === -1) throw 'Invalid adapter! Nonstandard method: ' + i
+        if (indexOf(implementing, i) === -1) {
+            if (i != 'async_each')
+                throw 'Invalid adapter '+id+'! Nonstandard method: ' + i
+        }
     }
     // if we made it this far the adapter interface is valid 
     Lawnchair.adapters.push(obj)
@@ -133,17 +136,24 @@ Lawnchair.prototype = {
     },
 
     // a classic iterator
-    each: function (callback) {
+    each: function (callback, done_callback) {
         var cb = this.lambda(callback)
+        var cb2 = this.lambda(done_callback)
         // iterate from chain
         if (this.__results) {
             for (var i = 0, l = this.__results.length; i < l; i++) cb.call(this, this.__results[i], i) 
+            if (cb2) cb2.call(this, null, -1);
         }  
         // otherwise iterate the entire collection 
         else {
-            this.all(function(r) {
-                for (var i = 0, l = r.length; i < l; i++) cb.call(this, r[i], i)
-            })
+            if (this.async_each) {
+                this.async_each(cb, cb2);
+            } else {
+                this.all(function(r) {
+                    for (var i = 0, l = r.length; i < l; i++) cb.call(this, r[i], i);
+                    if (cb2) cb2.call(this, null, -1);
+                })
+            }
         }
         return this
     }
