@@ -13,7 +13,9 @@ Lawnchair.adapter('indexed-db', (function(){
     return window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.oIndexedDB || window.msIndexedDB;
   }; 
   
-  
+    var READ_ONLY = 0;
+    var READ_WRITE = 1;
+    var VERSION_CHANGE = 2;
     
   return {
     
@@ -68,7 +70,7 @@ Lawnchair.adapter('indexed-db', (function(){
          var self = this;
          var win  = function (e) { if (callback) { obj.key = e.target.result; self.lambda(callback).call(self, obj) }};
          
-         var trans = this.db.transaction(["teststore"], webkitIDBTransaction.READ_WRITE, 0);
+         var trans = this.db.transaction(["teststore"], READ_WRITE, 0);
          var store = trans.objectStore("teststore");
          var request = obj.key ? store.put(obj, obj.key) : store.put(obj);
          
@@ -87,7 +89,7 @@ Lawnchair.adapter('indexed-db', (function(){
 
         var updateProgress = function(obj) {
             results.push(obj)
-            done = results.length === objs.length
+            done = (results.length === objs.length)
         }
 
         var checkProgress = setInterval(function() {
@@ -233,7 +235,7 @@ Lawnchair.adapter('indexed-db', (function(){
         
         try {
             this.db
-                .transaction(["teststore"], webkitIDBTransaction.READ_WRITE)
+                .transaction(["teststore"], READ_WRITE)
                 .objectStore("teststore").clear().onsuccess = win;
             
         } catch(e) {
